@@ -1,0 +1,22 @@
+# Build/artifact directory
+*/target
+
+*.iml
+
+# Mac
+*.DS_Store
+
+# IntelliJ
+**/.idea
+
+# UI directories
+/ui/core/node_modules/*
+/ui/core/build
+/ui/core/examples/excel-office-add-in/My Office Add-in/node_modules
+/ui/core/examples/office-addin/My Office Add-in/node_modules
+/ui/core/examples/excel-office-add-in/My Office Add-in/.vscode
+/ui/core/examples/excel-office-add-in/My Office Add-in/.idea
+/ui/.vscode
+/ui/node_modules/*
+/auth/node_modules/*
+/auth/.vscode

@@ -1,0 +1,132 @@
+<!-- Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT License. -->
+<!-- This file shows how to design a first-run page that provides a welcome screen to the user about the features of the add-in. -->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Contoso Task Pane Add-in</title>
+
+    <!-- Office JavaScript API -->
+    <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1.1/hosted/office.js"></script>
+
+    <!-- Custom logic for qb in Excel -->
+    <script>
+        const COLUMN_HEADERS_MAPPING = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
+            'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG', 'AH', 'AI', 'AK', 'AL', 'AM', 'AN',
+            'AO', 'AP', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AV', 'AW', 'AX', 'AY', 'AZ'
+        ];
+
+        window.onmessage = async (event) => {
+            console.log('In the event handler!');
+            console.log(event);
+
+            try {
+                await Excel.run(async (context) => {
+                    // Check if there is a Data sheet.
+                    let sheets = context.workbook.worksheets;
+                    sheets.load('items/name');
+
+                    await context.sync();
+
+                    let dataSheets = sheets.items.filter(sheet => sheet.name.toLowerCase() === 'data');
+
+                    // If not, then create a Data sheet and copy/paste qb columns and data.
+                    if (dataSheets.length === 0) {
+                        setRangeValues(context, sheets, event.data, null);
+                        await context.sync();
+                    }
+                    else {
+                    // If so, delete all data and copy/paste qb columns and data.
+                        let dataSheet = dataSheets[0]
+                        let range = dataSheet.getRange('A1:AZ1000000');
+                        range.clear();
+
+                        await context.sync();
+
+                        setRangeValues(context, sheets, event.data, dataSheet);
+
+                        await context.sync();
+                    }
+
+                    // todo:  Loop through all pivot tables and refresh if source is Data worksheet.
+        //            const pivotTables = context.workbook.pivotTables;
+        //            pivotTables.load('items');
+        //            await context.sync();
+        //
+        //            pivotTables.items.forEach(async (pivotTable) => {
+        //                const dataSourceType = pivotTable.getDataSourceType();
+        //                const dataSourceString = pivotTable.getDataSourceString();
+        //
+        //                await context.sync();
+        //
+        //                console.log(dataSourceType);
+        //                console.log(dataSourceString);
+        //            });
+
+                    // todo: loop through all pivot charts and refresh if source is Data worksheet.
+
+                    await context.sync();
+                })
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        const setRangeValues = async (excelContext, sheets, data, dataWorksheet = null) => {
+            if (dataWorksheet === null) {
+                let dataWorksheet = sheets.add('data');
+                dataWorksheet.load('name');
+
+                await excelContext.sync();
+            }
+
+            // Ending Excel worksheet column name.
+            let endingWorksheetColumnName = COLUMN_HEADERS_MAPPING[data.columns.length - 1];
+            let endingWorksheetRowNumber = data.data.length + 1;
+
+            // Write column names.
+            let columnRange = dataWorksheet.getRange(`A1:${endingWorksheetColumnName}1`);
+            columnRange.values = [data.columns];  // Wrap this in an array because Range#values must be a 2D array.
+
+            // Write data.
+            let dataRange = dataWorksheet.getRange(`A2:${endingWorksheetColumnName}${endingWorksheetRowNumber}`);
+            dataRange.values = data.data;
+        };
+
+        Office.onReady((info) => {
+          if (info.host === Office.HostType.Excel) {
+            document.getElementById("sideload-msg").style.display = "none";
+            document.getElementById("app-body").style.display = "flex";
+            document.getElementById("run").onclick = run;
+          }
+        });
+    </script>
+
+    <!-- For more information on Fluent UI, visit https://developer.microsoft.com/fluentui#/. -->
+    <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/9.6.1/css/fabric.min.css"/>
+
+    <!-- Template styles -->
+    <link href="taskpane.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body class="ms-font-m ms-welcome ms-Fabric">
+<!--    <span>-->
+<!--        <input id="qbUrl" type="text" placeholder="Type your qb URL here..." style="width: 90%;">-->
+<!--        <button id="loadIFrame">Load</button>-->
+<!--    </span>-->
+
+     <iframe id="qbIframe"
+             src="https://d3fyxl3k9jwzfj.cloudfront.net/"
+             style="position:absolute; top:0; left:0; width:100%; height:100%; border:0; margin-top:25px"
+             allowtransparency="true"
+             frameborder="0"
+             scrolling="yes"
+     >
+     </iframe>
+</body>
+
+</html>

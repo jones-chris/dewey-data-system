@@ -1,0 +1,11 @@
+.query-success {
+    font-size: x-large;
+    color: green;
+    text-align: center;
+}
+
+.query-failed {
+    font-size: x-large;
+    color: red;
+    text-align: center;
+}

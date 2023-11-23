@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: qb
+
+server:
+  port: 8082  # Make sure this matches the exposed port in the Dockerfile.
+  # Enable gzip
+  compression:
+    enabled: true
+    min-response-size: 2048
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain,application/javascript,text/css
+
+#logging:
+#  pattern:
+#    # https://www.tutorialspoint.com/log4j/log4j_patternlayout.htm
+#    console: "{
+#        \"time\": \"%d\",
+#        \"level\": \"%p\",
+#        \"source\": \"%logger{63}:%L\",
+#        \"method\": \"%X{method}\",
+#        \"remoteUser\": \"%X{remoteUser}\",
+#        \"uri\": \"%X{uri}\",
+#        \"responseCode\": \"%X{responseCode}\",
+#        \"contentLength\": \"%X{contentLength}\",
+#        \"remoteHost\": \"%X{remoteHost}\",
+#        \"requestId\": \"%X{requestId}\",
+#        \"partyGuid\": \"%X{partyGuid}\",
+#        \"sessionId\": \"%X{sessionId}\",
+#        \"message\": \"%replace(%m%wEx{6}){'[\r\n]+','\\n'}%nopex\"
+#      }%n"

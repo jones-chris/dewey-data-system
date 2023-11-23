@@ -1,0 +1,50 @@
+targetDataSources:
+  - name: finance_database
+    url: jdbc:postgresql://database:5432/postgres
+    databaseType: PostgreSQL
+    username: postgres
+    password: example
+    excludeObjects:
+      schemas: [
+        # information_schema,
+        # public,
+        # pg_catalog,
+        # qb4j
+      ]
+      tables: []
+      columns: []
+databaseMetadataCacheSource:
+  # An in-memory cache.
+  cacheType: IN_MEMORY
+
+  # A redis cache for local debugging.
+  #  cacheType: REDIS
+  #  host: localhost
+  #  port: 6379
+
+  # A redis cache without local debugging.
+#  cacheType: REDIS
+#  host: database_metadata_cache
+#  port: 6379
+queryTemplateDataSource:
+  # repositoryType: IN_MEMORY
+  repositoryType: SQL_DATABASE
+  url: jdbc:postgresql://database:5432/postgres
+  databaseType: PostgreSQL
+  username: postgres
+  password: example
+rules:
+  numberOfCriteriaUsingIndexedColumns: 1
+  maximumAllowedSelectStatementNumberOfColumns: 10
+securityConfiguration:
+  servingDomain: http://localhost:8080
+messagingConfiguration:
+  queueName: runnable-queries
+  host: queue
+  virtualHost: myVhost
+  username: guest
+  password: guest
+  port: 5672
+queryStatusConfiguration:
+  host: "query-status-cache"
+  port: 6379

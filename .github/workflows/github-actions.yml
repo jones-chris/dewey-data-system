@@ -1,0 +1,192 @@
+name: Build and Deploy
+on: [ push, workflow_dispatch ]
+jobs:
+#  Install-Dependencies:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - run: sudo apt-get update
+#      - run: sudo apt-get -y install awscli
+
+  Orientation:
+    runs-on: ubuntu-latest
+    steps:
+    - run: lsb_release -a
+    - run: pwd
+    - run: mvn --version
+    - run: docker --version
+    - run: docker info
+
+  Build-Java-REST-API-and-Consumer:
+    needs: ["Orientation"]
+    runs-on: ubuntu-latest
+    # It's important to set the timeout, because the DatabaseDataDaoImplTest#executeQuery_throwsQueryFailureExceptionWhenTimeOutIsReached
+    # method runs an infinite loop.
+    timeout-minutes: 10
+    steps:
+      # Set up java 11.
+      - uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: '11'
+      # Check out repo branch source code.
+      - name: Check out this repository code
+        uses: actions/checkout@v2
+      # List directory contents to confirm that repository has been checked out.
+      - run: ls -latr
+      # Get project version from pom and make it an output.
+      - name: Get project versions
+        run: |
+          echo "PROJECT_VERSION=$(mvn -f ./restapi help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
+          echo "::set-output name=PROJECT_VERSION::${{ env.PROJECT_VERSION }}"
+          
+          echo "QUERY_CONSUMER_PROJECT_VERSION=$(mvn -f ./query-consumer help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
+          echo "::set-output name=QUERY_CONSUMER_PROJECT_VERSION::${{ env.QUERY_CONSUMER_PROJECT_VERSION }}"
+      # Build the uber jars and run unit tests in all modules.
+      - run: mvn clean test install -Dmaven.javadoc.skip=true jacoco:report
+      # Cache local maven dependencies so that future builds are faster.
+      - name: Cache local Maven repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      # Send unit test reports to Code Cov.
+      - name: Upload unit test reports to Code Cov.
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./common/target/site/jacoco/jacoco.xml, ./restapi/target/site/jacoco/jacoco.xml, ./query-consumer/target/site/jacoco/jacoco.xml, ./sql-builder/target/site/jacoco/jacoco.xml
+#          files: ./coverage1.xml,./coverage2.xml # optional
+          flags: unittests # optional
+#          name: codecov-umbrella # optional
+#          fail_ci_if_error: true # optional (default = false)
+          verbose: true # optional (default = false)
+#      - name: Upload unit test reports to Code Cov.
+#        env:
+#          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+#        run: |
+#          curl -s https://codecov.io/bash > codecov.sh
+#          bash codecov.sh -t $CODECOV_TOKEN
+      # Build the docker image to push to ECR.
+      - run: |
+          docker image build -t 526661363425.dkr.ecr.us-east-1.amazonaws.com/qb:"${{ env.PROJECT_VERSION }}" --build-arg project_version="${{ env.PROJECT_VERSION }}" -f ./restapi/Dockerfile .
+          docker image build -t 526661363425.dkr.ecr.us-east-1.amazonaws.com/qb-query-consumer:"${{ env.QUERY_CONSUMER_PROJECT_VERSION }}" --build-arg project_version="${{ env.QUERY_CONSUMER_PROJECT_VERSION }}" -f ./query-consumer/Dockerfile .
+      # Push docker images to ECR.
+      - shell: bash
+        env:
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
+          AWS_DEFAULT_OUTPUT: json
+        run:  |
+          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 526661363425.dkr.ecr.us-east-1.amazonaws.com
+          docker push 526661363425.dkr.ecr.us-east-1.amazonaws.com/qb:${{ env.PROJECT_VERSION }}
+          docker push 526661363425.dkr.ecr.us-east-1.amazonaws.com/qb-query-consumer:${{ env.QUERY_CONSUMER_PROJECT_VERSION }}
+      # Push jar artifact to S3.
+      - shell: bash
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          S3_BUCKET_NAME: ${{ secrets.AWS_QB4J_API_BUCKET }}
+          AWS_DEFAULT_REGION: us-east-1
+          AWS_DEFAULT_OUTPUT: json
+        run: |
+          aws s3 cp ./restapi/target/restapi-*.jar "s3://${{ env.S3_BUCKET_NAME }}"
+          aws s3 cp ./common/target/common-*.jar "s3://${{ env.S3_BUCKET_NAME }}"
+          aws s3 cp ./sql-builder/target/sql-builder-*.jar "s3://${{ env.S3_BUCKET_NAME }}"
+          aws s3 cp ./query-consumer/target/query-consumer-*.jar "s3://${{ env.S3_BUCKET_NAME }}"
+
+  Build-Node-Auth-and-UI:
+    needs: ["Orientation"]
+    runs-on: ubuntu-latest
+    # It's important to set the timeout, because the DatabaseDataDaoImplTest#executeQuery_throwsQueryFailureExceptionWhenTimeOutIsReached
+    # method runs an infinite loop.
+    timeout-minutes: 10
+    env:
+      # Don't treat react-scripts build warnings as errors.
+      CI: false
+    steps:
+      # Set up java 11.
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      # Check out repo branch source code.
+      - name: Check out this repository code
+        uses: actions/checkout@v2
+      # List directory contents to confirm that repository has been checked out.
+      - run: ls -latr
+      # Get project versions from Auth's and UI's package.json.
+      - name: Get project versions
+        run: |
+          cd auth
+          echo "AUTH_VERSION=$(npm pkg get version | xargs echo)" >> $GITHUB_ENV
+          echo "::set-output name=AUTH_VERSION::${{ env.AUTH_VERSION }}"
+          cd ..
+          
+          cd ui
+          echo "UI_VERSION=$(npm pkg get version | xargs echo)" >> $GITHUB_ENV
+          echo "::set-output name=UI_VERSION::${{ env.UI_VERSION }}"
+          cd ..
+      # Build the UI React Core.
+      - run: | 
+          cd ui/core
+          npm install
+          npm run build
+          cd ../..
+      # Cache local npm dependencies so that future builds are faster.
+      - name: Get NPM cache directory
+        id: npm-cache-dir
+        shell: bash
+        run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
+      - name: Cache local NPM repository
+        uses: actions/cache@v3
+        id: npm-cache # use this to check for `cache-hit` ==> if: steps.npm-cache.outputs.cache-hit != 'true'
+        with:
+          path: ${{ steps.npm-cache-dir.outputs.dir }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      # Send unit test reports to Code Cov.
+      - name: Upload unit test reports to Code Cov.
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: |
+          curl -s https://codecov.io/bash > codecov.sh
+          bash codecov.sh -t $CODECOV_TOKEN
+      # Build the docker image to push to ECR.
+      - run: |
+          cd ./auth
+          docker image build -t 526661363425.dkr.ecr.us-east-1.amazonaws.com/auth:"${{ env.AUTH_VERSION }}" -f ./Dockerfile .
+          cd ..
+          cd ./ui
+          docker image build -t 526661363425.dkr.ecr.us-east-1.amazonaws.com/ui:"${{ env.UI_VERSION }}" -f ./Dockerfile .
+          cd ..
+      # Push docker images to ECR.
+      - shell: bash
+        env:
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
+          AWS_DEFAULT_OUTPUT: json
+        run:  |
+          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 526661363425.dkr.ecr.us-east-1.amazonaws.com
+          docker push 526661363425.dkr.ecr.us-east-1.amazonaws.com/auth:${{ env.AUTH_VERSION }}
+          docker push 526661363425.dkr.ecr.us-east-1.amazonaws.com/ui:${{ env.UI_VERSION }}
+      # Push Auth and UI directories to S3.
+      - shell: bash
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          S3_BUCKET_NAME: ${{ secrets.AWS_QB4J_API_BUCKET }}
+          AWS_DEFAULT_REGION: us-east-1
+          AWS_DEFAULT_OUTPUT: json
+        run: |
+          aws s3 cp ./auth "s3://${{ env.S3_BUCKET_NAME }}/auth-${{ env.AUTH_VERSION }}" --recursive --exclude "**/node_modules/*"
+          aws s3 cp ./ui "s3://${{ env.S3_BUCKET_NAME }}/ui-${{ env.UI_VERSION }}" --recursive --exclude "**/node_modules/*"

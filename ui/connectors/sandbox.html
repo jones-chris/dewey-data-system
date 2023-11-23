@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <meta name="viewport" content="width=device-width">
+    <script>
+        window.onmessage = (event) => {
+        	if (event.origin === '${servingDomain}') {
+        		console.log(event);
+
+	            let columns = event.data.columns;
+                window.qbColumns = columns;
+	            let data = event.data.data;
+                window.qbData = data;
+	            let sql = event.data.sql;
+
+	            // Create SQL p element.
+	            let sqlElement = document.createElement('p');
+	            sqlElement.innerHTML = sql;
+
+	            // Create table.
+	            let table = document.createElement('table');
+	            table.id = 'queryResultsTable';
+
+	            // Create data rows.
+	            data.forEach((dataArray, dataArrayIndex) => {
+	                let dataRow = table.insertRow(dataArrayIndex);
+	                dataArray.forEach((dataItem, dataItemIndex) => {
+	                    let cell = dataRow.insertCell(dataItemIndex);
+	                    cell.innerHTML = dataItem;
+	                });
+	            });
+
+	            // Create header row last because rows are appended to the beginning of the table.
+	            let headerRow = table.insertRow(0);
+	            columns.forEach((header, index) => {
+	                // let cell = headerRow.insertCell(index);
+	                let cell = document.createElement('th');
+	                cell.innerHTML = header;
+	                headerRow.appendChild(cell);
+	            });
+
+	            // Delete exist query results table (if it exists), then add new query results table.
+	            let queryResultsDiv = document.getElementById('queryResults');
+
+	            if (queryResultsDiv.children.length > 0) {
+	                while (queryResultsDiv.lastElementChild) {
+	                    queryResultsDiv.removeChild(queryResultsDiv.lastElementChild);
+	                }
+	            }
+
+	            queryResultsDiv.appendChild(sqlElement);
+	            queryResultsDiv.appendChild(table);
+
+                // Unhide export to CSV button
+                const exportToCsvButton = document.getElementById('exportToCsv');
+                exportToCsvButton.removeAttribute('hidden');
+        	}
+        };
+    </script>
+
+    <style>
+        figure {
+            position: relative;
+            width: 90vw;
+            height: 70vh;
+            margin: 30px auto;
+            text-align: center;
+        }
+        iframe {
+            position: absolute;
+            top: 0;
+            overflow: auto;
+            display: block;
+            height: 90%;
+            width: 100%;
+        }
+        figcaption {
+            text-align: -webkit-center;
+            position: absolute;
+            bottom: 0;
+            height: 10%;
+            width: 100%;
+        }
+        #queryResults {
+            display: grid;
+            flex-direction: column;
+            justify-content: center;
+            text-align: left;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+<figure>
+    <iframe src="${servingDomain}"
+            style="position:absolute; top:0; left:0; width:100%; height:100%; border:0"
+            allowtransparency="true" frameborder="0" scrolling="yes"
+    >
+    </iframe>
+</figure>
+<button id="exportToCsv" hidden="true" style="margin-left: 45%;">Export to CSV</button>
+<a id="exportToCsvUrl"></a>
+<div id="queryResults"></div>
+<script>
+    const exportToCsvButton = document.getElementById('exportToCsv');
+    exportToCsvButton.onclick = () => {
+        const csvRows = [];
+
+        // Headers
+        const headers = Object.values(window.qbColumns).join(',') + '\n';
+        csvRows.push(headers);
+
+        // Data rows
+        const values = window.qbData.map(row => 
+            row.map(item => `"${item}"`).join(',')
+        ).join('\n');
+        csvRows.push(values);
+
+        // Join all CSV rows with a carriage return.
+        const joinedCsvRows = headers + values;
+
+        // Creating a Blob for having a csv file format 
+        // and passing the data with type
+        const blob = new Blob(
+            [
+                joinedCsvRows
+            ], 
+            { 
+                type: 'text/csv' 
+            }
+        );
+
+        const url = window.URL.createObjectURL(blob);
+
+        const a = document.getElementById('exportToCsvUrl');
+
+        a.setAttribute('href', url)
+
+        a.setAttribute('download', 'download.csv');
+
+        a.click()
+    }
+</script>
+</body>
+</html>
