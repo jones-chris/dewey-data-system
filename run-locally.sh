@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export API_PROJECT_VERSION=$(mvn -f ./restapi help:evaluate -Dexpression=project.version -q -DforceStdout)
+export QUERY_PRODUCER_PROJECT_VERSION=$(mvn -f ./query-producer help:evaluate -Dexpression=project.version -q -DforceStdout)
 export QUERY_CONSUMER_PROJECT_VERSION=$(mvn -f ./query-consumer help:evaluate -Dexpression=project.version -q -DforceStdout)
 export AUTH_VERSION=$(cd ./auth && npm pkg get version | xargs echo && cd ..)
 export UI_VERSION=$(cd ./ui && npm pkg get version | xargs echo && cd ..)
@@ -20,10 +20,10 @@ if [ "$2" == "noImageBuilds" ]
 then
   echo "Skipping building Docker images..."
 else
-  sudo docker image build -t joneschris/qb:"$API_PROJECT_VERSION" --build-arg project_version="$API_PROJECT_VERSION" --file ./restapi/Dockerfile .
-  sudo docker image build -t joneschris/qb-query-consumer:"$QUERY_CONSUMER_PROJECT_VERSION" --build-arg project_version="$QUERY_CONSUMER_PROJECT_VERSION" --file ./query-consumer/Dockerfile .
-  sudo docker image build -t joneschris/auth:"$AUTH_VERSION" --file ./auth/Dockerfile ./auth
-  sudo docker image build -t joneschris/ui:"$UI_VERSION" --file ./ui/Dockerfile ./ui
+  sudo docker image build -t dewey-data/query-producer:"$QUERY_PRODUCER_PROJECT_VERSION" --build-arg project_version="$QUERY_PRODUCER_PROJECT_VERSION" --file ./query-producer/Dockerfile .
+  sudo docker image build -t dewey-data/query-consumer:"$QUERY_CONSUMER_PROJECT_VERSION" --build-arg project_version="$QUERY_CONSUMER_PROJECT_VERSION" --file ./query-consumer/Dockerfile .
+  sudo docker image build -t dewey-data/auth:"$AUTH_VERSION" --file ./auth/Dockerfile ./auth
+  sudo docker image build -t dewey-data/ui:"$UI_VERSION" --file ./ui/Dockerfile ./ui
 fi
 
 if [ $? != 0 ]; then exit $?; fi

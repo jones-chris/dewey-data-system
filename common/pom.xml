@@ -3,15 +3,16 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>qb</artifactId>
-        <groupId>net.querybuilder4j</groupId>
+        <artifactId>dewey</artifactId>
+        <groupId>com.deweydatasystem</groupId>
         <version>0.0.1</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>common</artifactId>
     <packaging>jar</packaging>
-    <version>0.0.5</version>
+    <version>0.0.1</version>
+
     <build>
         <plugins>
             <plugin>
@@ -94,12 +95,6 @@
             <artifactId>validation-api</artifactId>
             <version>2.0.1.Final</version>
         </dependency>
-<!--        &lt;!&ndash; https://mvnrepository.com/artifact/org.apache.tomcat/tomcat-dbcp &ndash;&gt;-->
-<!--        <dependency>-->
-<!--            <groupId>org.apache.tomcat</groupId>-->
-<!--            <artifactId>tomcat-dbcp</artifactId>-->
-<!--            <version>8.0.32</version>-->
-<!--        </dependency>-->
         <!-- https://mvnrepository.com/artifact/com.zaxxer/HikariCP -->
         <dependency>
             <groupId>com.zaxxer</groupId>

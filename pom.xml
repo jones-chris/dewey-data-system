@@ -8,7 +8,7 @@
     <artifactId>dewey</artifactId>
     <version>0.0.1</version>
     <modules>
-        <module>restapi</module>
+        <module>query-producer</module>
         <module>common</module>
         <module>query-consumer</module>
         <module>sql-builder</module>

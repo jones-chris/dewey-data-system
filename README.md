@@ -54,52 +54,114 @@ Follow these steps to run `qb` on your local machine:
 1. Create a file named `docker-compose.yml` with the following contents:
 
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
 
-  database:
-    image: joneschris/qb4j-postgres:0.0.3  # This is a database with sample data.
-    ports:
-      - '5432:5432'
-    environment:
-      POSTGRES_PASSWORD: example
+   auth:
+      image: "joneschris/auth:0.0.2"
+      ports:
+         - "8080:8080"
+      environment:
+         - UI_DOMAIN=http://ui:8081
+         - API_DOMAIN=http://api:8082
+         - ENABLE_AUTH=false
+      restart: always
 
-  api:
-    image: joneschris/qb:latest
-    ports:
-      - '8080:8080'
-    environment:
-      - qb_config=${QB_CONFIG}
-      - update_cache=${UPDATE_CACHE}
-    depends_on:
-      - database
+   database:
+      image: joneschris/qb4j-postgres:0.0.4
+      expose:
+         - 5432
+      ports:
+         - "5432:5432"
+      environment:
+         - POSTGRES_USER=postgres
+         - POSTGRES_PASSWORD=example
+
+   ui:
+      image: "joneschris/ui:0.0.3"
+      environment:
+         - SERVING_DOMAIN=http://localhost:8080
+      restart: always
+
+   api:
+      image: "joneschris/qb:0.0.15"
+      ports:
+         - '8082:8082'  # Port the API runs on.
+         # - '5005:5005' # Debugging port.
+      environment:
+         - update_cache=${UPDATE_CACHE:-false}  # True if you want to test the cache refresh, otherwise false to run the image as the API.
+      depends_on:
+         - database
+         - queue
+         - query-status-cache
+      restart: always
+      volumes:
+         - ./config:/qb/config:ro
+
+   queue:
+      image: "rabbitmq:alpine"
+      #    ports:
+      #      - "5672:5672"
+      environment:
+         - RABBITMQ_DEFAULT_VHOST=myVhost
+
+   query-consumer:
+      image: "joneschris/qb-query-consumer:0.0.12"
+      ports:
+         - "8081:8080"
+         - '5006:5005'
+      environment:
+         - qb_config=${QB_QUERY_CONSUMER_CONFIG}
+      depends_on:
+         - database
+         - queue
+         - query-status-cache
+      restart: always
+      volumes:
+         - ./config:/qb/config:ro
+
+   query-status-cache:
+      image: redis:latest
+      #    ports:
+      #      - '6379:6379'
+      deploy:
+         restart_policy:
+            condition: on-failure
+            max_attempts: 3
+
 ```
 
 2. Create a file named `qb.yml` with the following contents:  
 
 ```yaml
 targetDataSources:
-  - name: my_database
-    url: jdbc:postgresql://database:5432/postgres
-    databaseType: PostgreSQL
-    username: postgres
-    password: example
-    excludeObjects:
-      schemas: [
-        information_schema,
-        public,
-        pg_catalog,
-        qb4j
-      ]
-      tables: []
-      columns: []
-
+   - name: finance_database
+     url: jdbc:postgresql://database:5432/postgres
+     databaseType: PostgreSQL
+     username: postgres
+     password: example
+     excludeObjects:
+        schemas: [
+           information_schema,
+           public,
+           pg_catalog,
+           qb4j
+        ]
+        tables: []
+        columns: []
 databaseMetadataCacheSource:
-  cacheType: IN_MEMORY
-
+   cacheType: REDIS
+   host: localhost
+   port: 6379
+   username: my_username
+   password: my_password
 queryTemplateDataSource:
-  repositoryType: IN_MEMORY
+   repositoryType: SQL_DATABASE
+   url: jdbc:postgresql://database:5432/postgres
+   databaseType: PostgreSQL
+   username: postgres
+   password: example
 ```
 
 3. Assign the file contents to the `QB_CONFIG` shell variable: 

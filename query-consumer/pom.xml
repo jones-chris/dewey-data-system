@@ -2,9 +2,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>dewey</artifactId>
+        <groupId>com.deweydatasystem</groupId>
+        <version>0.0.1</version>
+    </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>net.querybuilder4j</groupId>
     <artifactId>query-consumer</artifactId>
     <packaging>jar</packaging>
     <version>0.0.12</version>
@@ -18,6 +22,7 @@
                 <version>3.2.4</version>
                 <executions>
                     <execution>
+                        <id>uber-jar</id>
                         <phase>package</phase>
                         <goals>
                             <goal>shade</goal>
@@ -25,7 +30,7 @@
                         <configuration>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>net.querybuilder4j.Main</mainClass>
+                                    <mainClass>com.deweydatasystem.Main</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>
@@ -128,9 +133,9 @@
             <version>2.13.1</version>
         </dependency>
         <dependency>
-            <groupId>net.querybuilder4j</groupId>
+            <groupId>com.deweydatasystem</groupId>
             <artifactId>common</artifactId>
-            <version>0.0.5</version>
+            <version>0.0.1</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
