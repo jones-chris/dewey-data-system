@@ -117,6 +117,8 @@ public class DatabaseMetadataCrawlerDao {
         String databaseName = targetDataSource.getName();
 
         try (Connection conn = targetDataSource.getDataSource().getConnection()) {
+            // Do NOT include "SYSTEM TABLE" in the string array.  "TABLE" and "VIEW" will only retrieve user-defined
+            // tables and views.  We do NOT want to expose system tables to users.
             ResultSet rs = conn.getMetaData().getTables(null, schema, null, new String[] {"TABLE", "VIEW"});
 
             while (rs.next()) {

@@ -1,5 +1,6 @@
 package com.deweydatasystem.model.database;
 
+import com.deweydatasystem.model.DatabaseMetadata;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import com.deweydatasystem.config.DatabaseType;
@@ -14,7 +15,7 @@ import java.util.List;
 @Setter
 @EqualsAndHashCode
 @ToString
-public class Database implements Serializable {
+public class Database implements Serializable, DatabaseMetadata {
 
     private static final long serialVersionUID = 1L;
 

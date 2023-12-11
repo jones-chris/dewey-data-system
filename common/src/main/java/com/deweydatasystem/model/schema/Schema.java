@@ -1,5 +1,6 @@
 package com.deweydatasystem.model.schema;
 
+import com.deweydatasystem.model.DatabaseMetadata;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import com.deweydatasystem.model.table.Table;
@@ -12,7 +13,7 @@ import java.util.List;
 @Setter
 @EqualsAndHashCode
 @ToString
-public class Schema {
+public class Schema implements DatabaseMetadata {
 
     private String fullyQualifiedName;
 

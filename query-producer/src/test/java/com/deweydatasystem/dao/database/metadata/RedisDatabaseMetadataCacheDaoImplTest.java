@@ -26,13 +26,13 @@ import static org.mockito.Mockito.*;
 @RunWith(MockitoJUnitRunner.class)
 public class RedisDatabaseMetadataCacheDaoImplTest {
 
-    private QbConfig qbConfig = buildQbConfigMock();
+    private final QbConfig qbConfig = buildQbConfigMock();
 
-    private DatabaseMetadataCrawlerDao databaseMetadataCrawlerDao = buildDatabaseMetadataCrawlerDaoMock();
+    private final DatabaseMetadataCrawlerDao databaseMetadataCrawlerDao = buildDatabaseMetadataCrawlerDaoMock();
 
-    private Jedis jedis = buildJedisMock();
+    private final Jedis jedis = buildJedisMock();
 
-    private RedisDatabaseMetadataCacheDaoImpl redisDatabaseMetadataCacheDao = new RedisDatabaseMetadataCacheDaoImpl(
+    private final RedisDatabaseMetadataCacheDaoImpl redisDatabaseMetadataCacheDao = new RedisDatabaseMetadataCacheDaoImpl(
             this.qbConfig,
             this.databaseMetadataCrawlerDao,
             this.jedis
@@ -43,10 +43,6 @@ public class RedisDatabaseMetadataCacheDaoImplTest {
         this.redisDatabaseMetadataCacheDao.refreshCache();
 
         verify(this.jedis, times(1)).flushAll();
-//        verify(this.jedis, times(1)).select(DATABASE_REDIS_DB);
-//        verify(this.jedis, times(1)).select(SCHEMA_REDIS_DB);
-//        verify(this.jedis, times(1)).select(TABLE_REDIS_DB);
-//        verify(this.jedis, times(1)).select(COLUMN_REDIS_DB);
         verify(this.jedis, times(4)).set(anyString(), anyString()); // Jedis#set called for 1 database, 1 schema, 1 table, and 1 column.
     }
 
@@ -62,6 +58,7 @@ public class RedisDatabaseMetadataCacheDaoImplTest {
     public void findDatabases_findsDatabaseSuccessfully() {
         Database expectedDatabase = new Database("database0", DatabaseType.PostgreSQL);
         String databaseName = "database0";
+        String expectedRedisDatabaseKey = "database/" + databaseName;
         when(this.jedis.get(anyString()))
                 .thenReturn(
                         Utils.serializeToJson(expectedDatabase)
@@ -69,8 +66,7 @@ public class RedisDatabaseMetadataCacheDaoImplTest {
 
         Database resultingDatabase = this.redisDatabaseMetadataCacheDao.findDatabases(databaseName);
 
-//        verify(this.jedis, times(1)).select(DATABASE_REDIS_DB);
-        verify(this.jedis, times(1)).get(databaseName);
+        verify(this.jedis, times(1)).get(expectedRedisDatabaseKey);
         assertEquals(expectedDatabase.getDatabaseName(), resultingDatabase.getDatabaseName());
         assertEquals(expectedDatabase.getDatabaseType(), resultingDatabase.getDatabaseType());
     }
@@ -78,11 +74,12 @@ public class RedisDatabaseMetadataCacheDaoImplTest {
     @Test
     public void findSchemas_returnsSchemasSuccessfully() {
         String databaseName = "database0";
+        String expectedRedisDatabaseKey = "schema/" + databaseName + ".*";
         when(this.jedis.keys(anyString()))
                 .thenReturn(
                         Set.of(
-                                "database0.schema0",
-                                "database0.schema1"
+                                "schema/database0.schema0",
+                                "schema/database0.schema1"
                         )
                 );
         when(this.jedis.mget(anyString(), anyString())) // anyString is passed in as an argument twice because there are 2 schemas.
@@ -99,8 +96,7 @@ public class RedisDatabaseMetadataCacheDaoImplTest {
 
         List<Schema> resultingSchemas = this.redisDatabaseMetadataCacheDao.findSchemas(databaseName);
 
-//        verify(this.jedis, times(1)).select(SCHEMA_REDIS_DB);
-        verify(this.jedis, times(1)).keys(databaseName + ".*");
+        verify(this.jedis, times(1)).keys(expectedRedisDatabaseKey);
         assertEquals(2, resultingSchemas.size());
         resultingSchemas.forEach(schema -> assertEquals(databaseName, schema.getDatabaseName()));
     }
@@ -119,6 +115,7 @@ public class RedisDatabaseMetadataCacheDaoImplTest {
     public void findTables_returnsTablesSuccessfully() {
         String databaseName = "database0";
         String schemaName = "schema0";
+        String expectedRedisTableKey = "table/" + databaseName + "." + schemaName + ".*";
         when(this.jedis.keys(anyString()))
                 .thenReturn(
                         Set.of(
@@ -140,8 +137,7 @@ public class RedisDatabaseMetadataCacheDaoImplTest {
 
         List<Table> resultingTables = this.redisDatabaseMetadataCacheDao.findTables(databaseName, schemaName);
 
-//        verify(this.jedis, times(1)).select(TABLE_REDIS_DB);
-        verify(this.jedis, times(1)).keys(databaseName + "." + schemaName + ".*");
+        verify(this.jedis, times(1)).keys(expectedRedisTableKey);
         assertEquals(2, resultingTables.size());
         resultingTables.forEach(table -> {
             assertEquals(databaseName, table.getDatabaseName());
@@ -164,6 +160,7 @@ public class RedisDatabaseMetadataCacheDaoImplTest {
         String databaseName = "database0";
         String schemaName = "schema0";
         String tableName = "table0";
+        String expectedRedisColumnKey = "column/" + databaseName + "." + schemaName + "." + tableName + ".*";
         when(this.jedis.keys(anyString()))
                 .thenReturn(
                         Set.of(
@@ -185,8 +182,7 @@ public class RedisDatabaseMetadataCacheDaoImplTest {
 
         List<Column> resultingColumns = this.redisDatabaseMetadataCacheDao.findColumns(databaseName, schemaName, tableName);
 
-//        verify(this.jedis, times(1)).select(COLUMN_REDIS_DB);
-        verify(this.jedis, times(1)).keys(databaseName + "." + schemaName + "." + tableName + ".*");
+        verify(this.jedis, times(1)).keys(expectedRedisColumnKey);
         assertEquals(2, resultingColumns.size());
         resultingColumns.forEach(column -> {
             assertEquals(databaseName, column.getDatabaseName());
@@ -215,8 +211,8 @@ public class RedisDatabaseMetadataCacheDaoImplTest {
 
         int resultingColumnDataType = this.redisDatabaseMetadataCacheDao.getColumnDataType(column);
 
-//        verify(this.jedis).select(COLUMN_REDIS_DB);
-        verify(this.jedis).get(column.getFullyQualifiedName());
+        final String expectedRedisColumnKey = String.format(RedisDatabaseMetadataCacheDaoImpl.COLUMN_REDIS_KEY_TEMPLATE, column.getFullyQualifiedName());
+        verify(this.jedis).get(expectedRedisColumnKey);
         assertEquals(column.getDataType(), resultingColumnDataType);
     }
 
@@ -228,8 +224,8 @@ public class RedisDatabaseMetadataCacheDaoImplTest {
 
         boolean columnExists = this.redisDatabaseMetadataCacheDao.columnExists(column);
 
-//        verify(this.jedis).select(COLUMN_REDIS_DB);
-        verify(this.jedis).exists(column.getFullyQualifiedName());
+        String expectedRedisColumnKey = String.format(RedisDatabaseMetadataCacheDaoImpl.COLUMN_REDIS_KEY_TEMPLATE, column.getFullyQualifiedName());
+        verify(this.jedis).exists(expectedRedisColumnKey);
         assertTrue(columnExists);
     }
 
@@ -248,9 +244,10 @@ public class RedisDatabaseMetadataCacheDaoImplTest {
                 )
         );
 
-//        verify(this.jedis).select(COLUMN_REDIS_DB);
+        String expectedRedisColumn1Key = String.format(RedisDatabaseMetadataCacheDaoImpl.COLUMN_REDIS_KEY_TEMPLATE, column1.getFullyQualifiedName());
+        String expectedRedisColumn2Key = String.format(RedisDatabaseMetadataCacheDaoImpl.COLUMN_REDIS_KEY_TEMPLATE, column2.getFullyQualifiedName());
         verify(this.jedis).exists(
-                Arrays.array(column1.getFullyQualifiedName(), column2.getFullyQualifiedName())
+                Arrays.array(expectedRedisColumn1Key, expectedRedisColumn2Key)
         );
         assertTrue(columnsExist);
     }
@@ -270,7 +267,6 @@ public class RedisDatabaseMetadataCacheDaoImplTest {
                 "column0"
         );
 
-//        verify(this.jedis, times(1)).select(COLUMN_REDIS_DB);
         assertEquals(expectedColumn, resultingColumn);
     }
 
@@ -308,7 +304,6 @@ public class RedisDatabaseMetadataCacheDaoImplTest {
         Jedis jedis = mock(Jedis.class);
 
         when(jedis.flushAll()).thenReturn("");
-//        when(jedis.select(anyInt())).thenReturn("");
 
         return jedis;
     }
@@ -326,7 +321,6 @@ public class RedisDatabaseMetadataCacheDaoImplTest {
                                 targetDataSource1
                         )
                 );
-
 
         return qbConfig;
     }

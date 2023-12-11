@@ -32,14 +32,27 @@ services:
     image: "dewey-data/query-producer:0.0.1"
     ports:
       - '8082:8082'  # Port the API runs on.
-      # - '5005:5005' # Debugging port.
+      - '5005:5005' # Debugging port.
     environment:
-      - update_cache=${UPDATE_CACHE:-false}  # True if you want to test the cache refresh, otherwise false to run the image as the API.
+      - update_cache=false  # True if you want to test the cache refresh, otherwise false to run the image as the API.
     depends_on:
       - database
       - queue
       - query-status-cache
     restart: always
+    volumes:
+      - ./config:/qb/config:ro
+
+  crawler:
+    image: "dewey-data/query-producer:0.0.1"
+    environment:
+      - update_cache=true  # True if you want to test the cache refresh, otherwise false to run the image as the API.
+    depends_on:
+      - database
+      - queue
+      - query-status-cache
+      - api
+    restart: on-failure # This will only restart if the container exits with a non-zero code.
     volumes:
       - ./config:/qb/config:ro
 

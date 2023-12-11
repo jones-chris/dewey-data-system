@@ -13,6 +13,12 @@ targetDataSources:
       tables: []
       columns: []
 databaseMetadataCacheSource:
-  cacheType: IN_MEMORY
+  cacheType: REDIS
+  host: localhost
+  port: 6379
 queryTemplateDataSource:
-  repositoryType: IN_MEMORY
+  repositoryType: SQL_DATABASE
+  url: jdbc:postgresql://localhost:5432/postgres
+  databaseType: PostgreSQL
+  username: postgres
+  password: example

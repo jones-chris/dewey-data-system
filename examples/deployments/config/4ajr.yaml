@@ -6,10 +6,9 @@ targetDataSources:
     password: example
     excludeObjects:
       schemas: [
-        # information_schema,
-        # public,
-        # pg_catalog,
-        # qb4j
+         information_schema,
+         public,
+         pg_catalog
       ]
       tables: []
       columns: []

@@ -1,5 +1,6 @@
 package com.deweydatasystem.model.column;
 
+import com.deweydatasystem.model.DatabaseMetadata;
 import com.deweydatasystem.model.SqlRepresentation;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
@@ -10,7 +11,9 @@ import java.io.Serializable;
 @EqualsAndHashCode
 @ToString
 @NoArgsConstructor
-public class Column implements SqlRepresentation, Serializable {
+public class Column implements SqlRepresentation, Serializable, DatabaseMetadata {
+
+    public static final String FULLY_QUALIFIED_NAME_TEMPLATE = "%s.%s.%s.%s";
 
     private static final long serialVersionUID = 1L;
 

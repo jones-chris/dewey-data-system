@@ -1,5 +1,6 @@
 package com.deweydatasystem.model.table;
 
+import com.deweydatasystem.model.DatabaseMetadata;
 import com.deweydatasystem.model.SqlRepresentation;
 import com.deweydatasystem.model.column.Column;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -15,7 +16,7 @@ import java.util.List;
 @Setter
 @EqualsAndHashCode
 @ToString
-public class Table implements SqlRepresentation, Serializable {
+public class Table implements SqlRepresentation, Serializable, DatabaseMetadata {
 
     private static final long serialVersionUID = 1L;
 
