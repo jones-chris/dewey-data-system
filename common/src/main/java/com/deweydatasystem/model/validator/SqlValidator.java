@@ -1,9 +1,13 @@
 package com.deweydatasystem.model.validator;
 
+import com.deweydatasystem.model.RunnableSql;
 import com.deweydatasystem.model.SelectStatement;
+import com.deweydatasystem.model.SqlParameter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import com.deweydatasystem.exceptions.UncleanSqlException;
+
+import java.util.List;
 
 /**
  * This class contains functions that validate a {@link SelectStatement} before it is built.
@@ -99,6 +103,18 @@ public abstract class SqlValidator<T> {
             if (upperCaseStr.contains(upperCaseKeywordWithStartingSpace) || upperCaseStr.contains(upperCaseKeywordWithTrailingSpace)) {
                 log.error("A destructive keyword, {}, was found in {}", keyword, upperCaseStr);
                 throw new UncleanSqlException();
+            }
+        }
+    }
+
+    /**
+     * Checks that all {@link SqlParameter#getConstraint()}s are satisfied.
+     * @param sqlParameters {@link List<SqlParameter>}
+     */
+    public static void assertSqlParametersAreSatisfied(List<SqlParameter> sqlParameters) {
+        for (SqlParameter sqlParameter : sqlParameters) {
+            if (! sqlParameter.getConstraint().isSatisfied(sqlParameter.getArguments())) {
+                throw new IllegalStateException();
             }
         }
     }

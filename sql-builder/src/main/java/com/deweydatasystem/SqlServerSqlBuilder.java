@@ -20,7 +20,7 @@ public class SqlServerSqlBuilder extends SqlBuilder {
 
     @Override
     @LogExecutionTime
-    public String getSql() {
+    public String getParameterizedSql() {
         this.assertIsBuilt();
 
         this.createCommonTableExpressionClause();

@@ -39,7 +39,7 @@ public class TestUtils {
                 .thenReturn(sqlBuilder);
         when(sqlBuilder.build())
                 .thenReturn(sqlBuilder);
-        when(sqlBuilder.getSql())
+        when(sqlBuilder.getParameterizedSql())
                 .thenReturn(getSqlResult);
 
         return sqlBuilder;

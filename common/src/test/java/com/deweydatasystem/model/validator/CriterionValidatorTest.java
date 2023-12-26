@@ -35,7 +35,7 @@ public class CriterionValidatorTest {
                         Conjunction.And,
                         null,
                         Operator.equalTo,
-                        new Filter(List.of("1"), List.of(), List.of()),
+                        new Filter(List.of("1")),
                         null
                 )
         );
@@ -59,7 +59,7 @@ public class CriterionValidatorTest {
                         Conjunction.And,
                         new Column(),
                         null,
-                        new Filter(List.of("1"), List.of(), List.of()),
+                        new Filter(List.of("1")),
                         null
                 )
         );
@@ -83,7 +83,7 @@ public class CriterionValidatorTest {
                         Conjunction.And,
                         new Column(),
                         Operator.equalTo,
-                        new Filter(List.of(), List.of(), List.of()),
+                        new Filter(List.of()),
                         null
                 )
         );
@@ -107,7 +107,7 @@ public class CriterionValidatorTest {
                         Conjunction.And,
                         new Column("database", "schema", "table", "column", 4, "alias"),
                         Operator.equalTo,
-                        new Filter(List.of("bob"), List.of(), List.of()),
+                        new Filter(List.of("bob")),
                         null
                 )
         );
@@ -131,7 +131,7 @@ public class CriterionValidatorTest {
                         Conjunction.And,
                         new Column("database", "schema", "table", "column", 16, "alias"),
                         Operator.equalTo,
-                        new Filter(List.of("bob"), List.of(), List.of()),
+                        new Filter(List.of("bob")),
                         null
                 )
         );

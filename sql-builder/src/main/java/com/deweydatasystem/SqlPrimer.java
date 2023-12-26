@@ -99,41 +99,41 @@ public class SqlPrimer {
         }
     }
 
-    /**
-     * Interpolates the SelectStatement's Criteria with the SelectStatement's Criteria Arguments.
-     *
-     * @param selectStatement {@link SelectStatement}
-     */
-    public static void interpolateRuntimeArguments(SelectStatement selectStatement) {
-        Map<String, List<String>> runtimeParametersAndArguments = selectStatement.getCriteriaArguments();
-
-        // For each criterion...
-        selectStatement.getFlattenedCriteria().forEach(criterion -> {
-            // For each parameter...
-            criterion.getFilter().getParameters().forEach(parameter -> {
-                // Get the runtime arg...
-                Optional.ofNullable(runtimeParametersAndArguments.get(parameter))
-                        .ifPresentOrElse(
-                                // If present and the runtime arg is sub query, then add the sub query name to sub queries...
-                                runtimeArguments -> {
-                                    runtimeArguments.forEach(runtimeArgument -> {
-                                        if (runtimeArgument.startsWith("$")) {
-                                            String subQueryName = runtimeArgument.substring(1);
-                                            criterion.getFilter().getSubQueries().add(subQueryName);
-                                        } else {
-                                            // If present and the runtime arg is not sub query, then add the argument to values...
-                                            criterion.getFilter().getValues().add(runtimeArgument);
-                                        }
-                                    });
-                                },
-                                // If not present, throw an exception.
-                                () -> {
-                                    throw new IllegalStateException("Could not find runtime argument for parameter, " + parameter);
-                                }
-                        );
-            });
-        });
-    }
+//    /**
+//     * Interpolates the SelectStatement's Criteria with the SelectStatement's Criteria Arguments.
+//     *
+//     * @param selectStatement {@link SelectStatement}
+//     */
+//    public static void interpolateRuntimeArguments(SelectStatement selectStatement) {
+//        Map<String, List<String>> runtimeParametersAndArguments = selectStatement.getCriteriaArguments();
+//
+//        // For each criterion...
+//        selectStatement.getFlattenedCriteria().forEach(criterion -> {
+//            // For each parameter...
+//            criterion.getFilter().getParameters().forEach(parameter -> {
+//                // Get the runtime arg...
+//                Optional.ofNullable(runtimeParametersAndArguments.get(parameter))
+//                        .ifPresentOrElse(
+//                                // If present and the runtime arg is sub query, then add the sub query name to sub queries...
+//                                runtimeArguments -> {
+//                                    runtimeArguments.forEach(runtimeArgument -> {
+//                                        if (runtimeArgument.startsWith("$")) {
+//                                            String subQueryName = runtimeArgument.substring(1);
+//                                            criterion.getFilter().getSubQueries().add(subQueryName);
+//                                        } else {
+//                                            // If present and the runtime arg is not sub query, then add the argument to values...
+//                                            criterion.getFilter().getValues().add(runtimeArgument);
+//                                        }
+//                                    });
+//                                },
+//                                // If not present, throw an exception.
+//                                () -> {
+//                                    throw new IllegalStateException("Could not find runtime argument for parameter, " + parameter);
+//                                }
+//                        );
+//            });
+//        });
+//    }
 
     /**
      * Interpolates the SelectStatement's Criteria with a "SELECT * FROM" with the relevant Common Table Expressions
@@ -144,28 +144,30 @@ public class SqlPrimer {
     public static void interpolateSubQueries(SelectStatement selectStatement) {
         // For each criterion...
         selectStatement.getFlattenedCriteria().forEach(criterion -> {
-            // For each sub query...
-            final String sql = "SELECT * FROM %s";
-            criterion.getFilter().getSubQueries().forEach(subQuery -> {
-                // Find the Common Table Expression with the same name as the sub query...
-                selectStatement.getCommonTableExpressions().stream()
-                        .filter(commonTableExpression -> commonTableExpression.getName().equals(subQuery))
-                        .findFirst()
-                        .ifPresentOrElse(
-                                // If present, create the sub query SQL and add it to the values...
-                                commonTableExpression -> {
-                                    SqlValidator.assertSqlIsClean(commonTableExpression.getName());
+            final String subQueryPlaceholderName = criterion.getFilter().getSubQueryPlaceholder();
+            if (subQueryPlaceholderName == null || subQueryPlaceholderName.isEmpty()) {
+                return;
+            }
 
-                                    criterion.getFilter().getValues().add(
-                                            String.format(sql, commonTableExpression.getName())
-                                    );
-                                },
-                                // If not present, throw an exception.
-                                () -> {
-                                    throw new IllegalStateException("Could not find Common Table Expression with name, " + subQuery);
-                                }
-                        );
-            });
+            final String sql = "SELECT * FROM %s";
+            // Find the Common Table Expression with the same name as the sub query...
+            selectStatement.getCommonTableExpressions().stream()
+                    .filter(commonTableExpression -> commonTableExpression.getName().equals(subQueryPlaceholderName))
+                    .findFirst()
+                    .ifPresentOrElse(
+                            // If present, create the sub query SQL and add it to the values...
+                            commonTableExpression -> {
+                                SqlValidator.assertSqlIsClean(commonTableExpression.getName());
+
+                                criterion.getFilter().replaceSubQueryPlaceholder(
+                                        String.format(sql, commonTableExpression.getName())
+                                );
+                            },
+                            // If not present, throw an exception.
+                            () -> {
+                                throw new IllegalStateException("Could not find Common Table Expression with name, " + subQueryPlaceholderName);
+                            }
+                    );
         });
     }
 

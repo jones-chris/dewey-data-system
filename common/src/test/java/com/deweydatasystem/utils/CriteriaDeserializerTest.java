@@ -52,17 +52,13 @@ public class CriteriaDeserializerTest {
         Criterion criterion1 = TestUtils.buildCriterion(
                 TestUtils.buildColumn(Types.INTEGER),
                 new Filter(
-                        List.of("1", "2", "3"),
-                        List.of(),
-                        List.of()
+                        List.of("1", "2", "3")
                 )
         );
         Criterion criterion2 = TestUtils.buildCriterion(
                 TestUtils.buildColumn(Types.VARCHAR),
                 new Filter(
-                        List.of("bob", "sam", "joe"),
-                        List.of(),
-                        List.of()
+                        List.of("bob", "sam", "joe")
                 )
         );
         ObjectMapper objectMapper = new ObjectMapper();
@@ -181,8 +177,8 @@ public class CriteriaDeserializerTest {
         List<Criterion> criteria = this.criteriaDeserializer.deserialize(jsonParser, deserializationContext);
 
         assertEquals(1, criteria.size());
-        assertEquals(1, criteria.get(0).getFilter().getParameters().size());
-        assertEquals(parameterName, criteria.get(0).getFilter().getParameters().get(0));
+        assertFalse(criteria.get(0).getFilter().getParameter().isEmpty());
+        assertEquals(parameterName, criteria.get(0).getFilter().getParameter());
     }
 
     @Test
@@ -211,8 +207,8 @@ public class CriteriaDeserializerTest {
         List<Criterion> criteria = this.criteriaDeserializer.deserialize(jsonParser, deserializationContext);
 
         assertEquals(1, criteria.size());
-        assertEquals(1, criteria.get(0).getFilter().getParameters().size());
-        assertEquals(parameterName, criteria.get(0).getFilter().getParameters().get(0));
+        assertFalse(criteria.get(0).getFilter().getParameter().isEmpty());
+        assertEquals(parameterName, criteria.get(0).getFilter().getParameter());
     }
 
     @Test
@@ -268,8 +264,8 @@ public class CriteriaDeserializerTest {
         List<Criterion> criteria = this.criteriaDeserializer.deserialize(jsonParser, deserializationContext);
 
         assertEquals(1, criteria.size());
-        assertEquals(1, criteria.get(0).getFilter().getSubQueries().size());
-        assertEquals(subQueryName, criteria.get(0).getFilter().getSubQueries().get(0));
+        assertFalse(criteria.get(0).getFilter().getSubQueryPlaceholder().isEmpty());
+        assertEquals(subQueryName, criteria.get(0).getFilter().getSubQueryPlaceholder());
     }
 
     @Test
@@ -298,8 +294,8 @@ public class CriteriaDeserializerTest {
         List<Criterion> criteria = this.criteriaDeserializer.deserialize(jsonParser, deserializationContext);
 
         assertEquals(1, criteria.size());
-        assertEquals(1, criteria.get(0).getFilter().getSubQueries().size());
-        assertEquals(subQueryName, criteria.get(0).getFilter().getSubQueries().get(0));
+        assertFalse(criteria.get(0).getFilter().getSubQueryPlaceholder().isEmpty());
+        assertEquals(subQueryName, criteria.get(0).getFilter().getSubQueryPlaceholder());
     }
 
     @Test

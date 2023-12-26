@@ -75,12 +75,14 @@ public class CriteriaDeserializer extends StdDeserializer<List<Criterion>> {
             // Set the Parameters if they come over from the UI as a Value with the '@' prefix.
             if (valueText.startsWith("@")) {
                 String valueWithoutPrefix = valueText.substring(1); // Strip the '@' at the beginning of the value.
-                filter.getParameters().add(valueWithoutPrefix);
+                filter.setParameter(valueWithoutPrefix);
+//                filter.getParameters().add(valueWithoutPrefix);
             }
             // Set the Sub Queries if they come over from the UI as a Value with the '$' prefix.
             else if (valueText.startsWith("$")) {
                 String valueWithoutPrefix = valueText.substring(1); // Strip the '$' at the beginning of the value.
-                filter.getSubQueries().add(valueWithoutPrefix);
+                filter.setSubQueryPlaceholder(valueWithoutPrefix);
+//                filter.getSubQueries().add(valueWithoutPrefix);
             }
             // Values
             else {
@@ -97,7 +99,8 @@ public class CriteriaDeserializer extends StdDeserializer<List<Criterion>> {
             }
 
             for (JsonNode parameter : filterParams) {
-                filter.getParameters().add(parameter.asText());
+                filter.setParameter(parameter.asText());
+//                filter.getParameters().add(parameter.asText());
             }
         }
 
@@ -110,7 +113,8 @@ public class CriteriaDeserializer extends StdDeserializer<List<Criterion>> {
             }
 
             for (JsonNode subQuery : filterSubQueries) {
-                filter.getSubQueries().add(subQuery.asText());
+                filter.setSubQueryPlaceholder(subQuery.asText());
+//                filter.getSubQueries().add(subQuery.asText());
             }
         }
 

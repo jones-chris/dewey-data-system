@@ -1,5 +1,6 @@
 package com.deweydatasystem.utils;
 
+import com.deweydatasystem.exceptions.CriterionColumnDataTypeAndFilterMismatchException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -12,6 +13,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
+import java.math.BigDecimal;
 import java.sql.Types;
 import java.util.*;
 
@@ -217,6 +219,25 @@ public class Utils {
         out.writeObject(obj);
 
         return bos.toByteArray();
+    }
+
+    public static boolean isOfJdbcType(String value, int jdbcDataType) {
+        if (jdbcDataType == Types.BIGINT || jdbcDataType == Types.DECIMAL || jdbcDataType == Types.DOUBLE ||
+                jdbcDataType == Types.FLOAT || jdbcDataType == Types.INTEGER || jdbcDataType == Types.NUMERIC ||
+                jdbcDataType == Types.SMALLINT || jdbcDataType == Types.TINYINT) {
+            try {
+                BigDecimal.valueOf(Double.parseDouble(value));
+                return true;
+            } catch (NumberFormatException e) {
+                return false;
+            }
+        }
+        else if (jdbcDataType == Types.BOOLEAN) {
+            return Boolean.TRUE.toString().toLowerCase().equals(value) || Boolean.FALSE.toString().toLowerCase().equals(value);
+        }
+
+        // If JDBC type is another type, such as a String, then return true.
+        return true;
     }
 
 }

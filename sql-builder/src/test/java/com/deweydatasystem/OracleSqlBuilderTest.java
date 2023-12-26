@@ -84,7 +84,7 @@ public class OracleSqlBuilderTest extends SqlBuilderCommonTests {
         long limit = 10L;
         selectStatement.setLimit(limit);
         Filter filter = new Filter(
-                List.of("1"), List.of(), List.of()
+                List.of("1")
         );
         selectStatement.getCriteria().add(
                 new Criterion(0, null, Conjunction.And, column, Operator.equalTo, filter, List.of())

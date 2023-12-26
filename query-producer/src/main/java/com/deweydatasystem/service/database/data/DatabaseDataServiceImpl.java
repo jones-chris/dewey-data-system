@@ -109,7 +109,9 @@ public class DatabaseDataServiceImpl implements DatabaseDataService {
                 .withoutRulesValidation()
                 .withStatement(selectStatement)
                 .build()
-                .getSql();
+                .getParameterizedSql();
+
+        // todo:  Add SQL interpolation here.
 
         // Query the database.
         try {

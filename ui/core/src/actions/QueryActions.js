@@ -18,16 +18,23 @@ export const runQuery = () => {
                 'Content-Type': 'application/json'
             }
         }); 
-    } 
+    }
     else if (! store.getState().menuBar.rawSql.isHidden) {
         // Send the Raw SQL the user created to the API.
         let apiUrl = `${store.getState().config.baseApiUrl}/data/${store.getState().query.selectedDatabase.databaseName}/query/raw`;
         let rawSql = store.getState().query.rawSql;
         return fetch(apiUrl, {
             method: 'POST',
-            body: rawSql,
+            body: JSON.stringify({
+                'sql': rawSql,
+                'sqlParameters': [],
+                'database': store.getState().query.selectedDatabase.databaseName
+            }),
             headers: {
                 'Content-Type': 'text/plain' // Just send the raw SQL string, so Content-Type is not 'application/json'.
+            },
+            headers: {
+                'Content-Type': 'application/json'
             }
         });
     }
@@ -104,6 +111,13 @@ export const saveQuery = () => {
 export const importQuery = (queryName, queryVersion) => {
     let apiUrl = `${store.getState().config.baseApiUrl}/query-template/${queryName}?version=${queryVersion}`;
     return fetch(apiUrl);
+}
+
+export const extractParameters = (sql) => {
+    const regEx = /\?[\w]+/gm;
+    let matches = sql.match(regEx);
+
+    return (matches) ? matches : [];
 }
 
 const buildSelectStatement = () => {

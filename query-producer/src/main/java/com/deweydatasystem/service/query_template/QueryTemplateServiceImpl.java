@@ -2,9 +2,7 @@ package com.deweydatasystem.service.query_template;
 
 import com.deweydatasystem.dao.database.DatabaseMetadataCacheDao;
 import com.deweydatasystem.dao.query_template.QueryTemplateDao;
-import com.deweydatasystem.exceptions.CacheMissException;
 import com.deweydatasystem.model.SelectStatement;
-import com.deweydatasystem.model.criterion.CriterionParameter;
 import com.deweydatasystem.model.cte.CommonTableExpression;
 import com.deweydatasystem.service.QueryTemplateService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +43,7 @@ public class QueryTemplateServiceImpl implements QueryTemplateService {
         selectStatement.getMetadata().setColumns(selectStatement.getColumns());
 
         // Create metadata for criteria parameters.
-        this.setSelectStatementCriteriaParameters(selectStatement);
+//        this.setSelectStatementCriteriaParameters(selectStatement);
 
         // Get the newest version number in the database.
         this.queryTemplateDao.getNewestVersion(selectStatement.getMetadata().getName())
@@ -93,7 +91,7 @@ public class QueryTemplateServiceImpl implements QueryTemplateService {
                 selectStatement.setCriteriaArguments(commonTableExpression.getParametersAndArguments());
                 selectStatement.setOverrides(commonTableExpression.getOverrides());
 
-                commonTableExpression.setSelectStatement(selectStatement);
+//                commonTableExpression.setSelectStatement(selectStatement);
             });
         }
     }
@@ -108,28 +106,28 @@ public class QueryTemplateServiceImpl implements QueryTemplateService {
         return this.queryTemplateDao.getMetadata(name, version);
     }
 
-    /**
-     * A private helper method for setting the {@param selectStatement}'s {@link List<CriterionParameter>}.
-     *
-     * @param selectStatement {@link SelectStatement}
-     */
-    private void setSelectStatementCriteriaParameters(SelectStatement selectStatement) {
-        selectStatement.getFlattenedCriteria().forEach(criterion -> {
-            // Check that the column exists.
-            if (this.databaseMetadataCacheDao.columnExists(criterion.getColumn())) {
-                // If so, create a CriterionParameter for each parameter and add it to the SelectStatement's Metadata.
-                criterion.getFilter().getParameters().forEach(parameter -> {
-                    selectStatement.getMetadata().getCriteriaParameters().add(
-                            new CriterionParameter(
-                                    parameter,
-                                    criterion.getColumn(),
-                                    criterion.hasMultipleValuesOperator())
-                    );
-                });
-            } else {
-                throw new CacheMissException("Did not recognize column, " + criterion.getColumn().getColumnName());
-            }
-        });
-    }
+//    /**
+//     * A private helper method for setting the {@param selectStatement}'s {@link List<CriterionParameter>}.
+//     *
+//     * @param selectStatement {@link SelectStatement}
+//     */
+//    private void setSelectStatementCriteriaParameters(SelectStatement selectStatement) {
+//        selectStatement.getFlattenedCriteria().forEach(criterion -> {
+//            // Check that the column exists.
+//            if (this.databaseMetadataCacheDao.columnExists(criterion.getColumn())) {
+//                // If so, create a CriterionParameter for each parameter and add it to the SelectStatement's Metadata.
+//                criterion.getFilter().getParameters().forEach(parameter -> {
+//                    selectStatement.getMetadata().getCriteriaParameters().add(
+//                            new CriterionParameter(
+//                                    parameter,
+//                                    criterion.getColumn(),
+//                                    criterion.hasMultipleValuesOperator())
+//                    );
+//                });
+//            } else {
+//                throw new CacheMissException("Did not recognize column, " + criterion.getColumn().getColumnName());
+//            }
+//        });
+//    }
 
 }

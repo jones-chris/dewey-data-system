@@ -1,5 +1,6 @@
 package com.deweydatasystem.controller.database.data;
 
+import com.deweydatasystem.ParameterizedSqlInterpolator;
 import com.deweydatasystem.dao.database.IdentifiedQueryResult;
 import com.deweydatasystem.dao.database.QueryResult;
 import com.deweydatasystem.exceptions.QueryFailureException;
@@ -7,6 +8,7 @@ import com.deweydatasystem.model.SelectStatement;
 import com.deweydatasystem.model.ro.RunnableQueryMessage;
 import com.deweydatasystem.model.validator.SqlValidator;
 import com.deweydatasystem.ro.RunQueryTemplateRequest;
+import com.deweydatasystem.model.RunnableSql;
 import com.deweydatasystem.service.QueryTemplateService;
 import com.deweydatasystem.service.database.data.DatabaseDataService;
 import com.deweydatasystem.service.messaging.RunnableQueryPublisherService;
@@ -26,15 +28,15 @@ import java.util.concurrent.TimeoutException;
 @RequestMapping("/api/v1/data")
 public class DatabaseDataController {
 
-    private DatabaseDataService databaseDataService;
+    private final DatabaseDataService databaseDataService;
 
-    private SqlBuilderFactory sqlBuilderFactory;
+    private final SqlBuilderFactory sqlBuilderFactory;
 
-    private QueryTemplateService queryTemplateService;
+    private final QueryTemplateService queryTemplateService;
 
-    private RunnableQueryPublisherService runnableQueryPublisherService;
+    private final RunnableQueryPublisherService runnableQueryPublisherService;
 
-    private IdentifiedQueryResultService identifiedQueryResultService;
+    private final IdentifiedQueryResultService identifiedQueryResultService;
 
     @Autowired
     public DatabaseDataController(
@@ -80,27 +82,6 @@ public class DatabaseDataController {
     }
 
     /**
-     * Execute a SelectStatement, audits the database for any unexpected changes, heals the database if necessary, publishes
-     * a request to an SNS topic (if the database needed to be healed), and returns the query's results.
-     *
-     * @param selectStatement The SelectStatement to build a SQL string for.
-     * @return A {@link ResponseEntity} containing a {@link QueryResult}.
-     */
-    @PostMapping(value = "/{database}/query")
-    public ResponseEntity<UUID> getQueryResults(
-            @PathVariable String database,
-            @RequestBody SelectStatement selectStatement
-    ) throws IOException, TimeoutException {
-        String sql = this.sqlBuilderFactory
-                .buildSqlBuilder(database)
-                .withStatement(selectStatement)
-                .build()
-                .getSql();
-
-        return this.runSql(database, sql, selectStatement);
-    }
-
-    /**
      * Returns a SQL {@link String} using the supplied {@link SelectStatement}.
      *
      * @param selectStatement The SelectStatement to build a SQL {@link String} for.
@@ -111,25 +92,30 @@ public class DatabaseDataController {
             @PathVariable String database,
             @RequestBody SelectStatement selectStatement
     ) {
+        // todo:  Make this return parameterized SQL with parameters that were found.
         final String sql = this.sqlBuilderFactory
                 .buildSqlBuilder(database)
                 .withStatement(selectStatement)
                 .build()
-                .getSql();
+                .getParameterizedSql();
 
         return ResponseEntity.ok(sql);
     }
 
     @PostMapping(
             value = "/{database}/query/raw",
-            consumes = MediaType.TEXT_PLAIN_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<UUID> runRawSql(
             @PathVariable String database,
-            @RequestBody String sql
-    ) throws IOException, TimeoutException {
-        SqlValidator.assertSqlIsNotDestructive(sql);
+            @RequestBody RunnableSql runnableSql
+            ) throws IOException, TimeoutException {
+        SqlValidator.assertSqlIsNotDestructive(runnableSql.getSql());
+        SqlValidator.assertSqlParametersAreSatisfied(runnableSql.getSqlParameters());
+
+        final String sql = ParameterizedSqlInterpolator.interpolate(runnableSql);
+
         return this.runSql(database, sql);
     }
 
@@ -163,7 +149,9 @@ public class DatabaseDataController {
                 .buildSqlBuilder(database)
                 .withStatement(selectStatement)
                 .build()
-                .getSql();
+                .getParameterizedSql();
+
+        // todo:  Interpolate the SQL before running it.
 
         return this.runSql(database, sql, selectStatement);
     }
@@ -199,19 +187,10 @@ public class DatabaseDataController {
                 .buildSqlBuilder(database)
                 .withStatement(selectStatement)
                 .build()
-                .getSql();
+                .getParameterizedSql();
 
         return ResponseEntity.ok(sql);
     }
-
-//    @GetMapping(
-//            value = "/query/{runnableQueryUuid}/status",
-//            produces = MediaType.APPLICATION_JSON_VALUE
-//    )
-//    public ResponseEntity<Map<QueryStatus.Status, OffsetDateTime>> getQueryStatus(@PathVariable UUID runnableQueryUuid) {
-//        final IdentifiedQueryResult identifiedQueryResult = this.identifiedQueryResultService.getById(runnableQueryUuid);
-//        return ResponseEntity.ok(identifiedQueryResult.getStatusStartTimes());
-//    }
 
     @GetMapping(
             value = "/query/{runnableQueryUuid}/result",

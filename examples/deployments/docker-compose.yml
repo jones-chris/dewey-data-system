@@ -3,6 +3,9 @@ version: "3.8"
 services:
 
   auth:
+    build:
+      context: ../../auth
+#      dockerfile: ../../auth/Dockerfile
     image: "dewey-data/auth:0.0.1"
     ports:
       - "8080:8080"
@@ -23,12 +26,20 @@ services:
       - POSTGRES_PASSWORD=example
 
   ui:
+    build:
+      context: ../../ui
+#      dockerfile: ../../ui/Dockerfile
     image: "dewey-data/ui:0.0.1"
     environment:
       - SERVING_DOMAIN=http://localhost:8080
     restart: always
 
   api:
+    build:
+      context: .
+      dockerfile: ./query-producer/Dockerfile
+      args:
+        project_version: "0.0.1"
     image: "dewey-data/query-producer:0.0.1"
     ports:
       - '8082:8082'  # Port the API runs on.
@@ -44,6 +55,9 @@ services:
       - ./config:/qb/config:ro
 
   crawler:
+    build:
+      context: ../../query-producer
+#      dockerfile: ../../query-producer/Dockerfile
     image: "dewey-data/query-producer:0.0.1"
     environment:
       - update_cache=true  # True if you want to test the cache refresh, otherwise false to run the image as the API.
@@ -64,6 +78,10 @@ services:
       - RABBITMQ_DEFAULT_VHOST=myVhost
 
   query-consumer:
+    build:
+      context: .
+      args:
+        project_version: "0.0.1"
     image: "dewey-data/query-consumer:0.0.12"
     ports:
       - "8081:8080"

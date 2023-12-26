@@ -59,7 +59,7 @@ public abstract class SqlBuilderCommonTests {
 
         this.sqlBuilder.withStatement(selectStatement)
                 .build()
-                .getSql();
+                .getParameterizedSql();
 
         Mockito.verify(this.sqlBuilder, Mockito.times(1)).createCommonTableExpressionClause();
         Mockito.verify(this.sqlBuilder, Mockito.times(1)).createSelectClause();
@@ -78,7 +78,7 @@ public abstract class SqlBuilderCommonTests {
 
         String sql = this.sqlBuilder.withStatement(selectStatement)
                 .build()
-                .getSql();
+                .getParameterizedSql();
 
         Assert.assertEquals(this.getExpectedSql(), sql.trim());
     }
@@ -99,7 +99,7 @@ public abstract class SqlBuilderCommonTests {
         CommonTableExpression commonTableExpression = new CommonTableExpression();
         commonTableExpression.setName("name");
         commonTableExpression.setQueryName("cte1");
-        commonTableExpression.setSelectStatement(TestUtils.buildSelectStatement());
+//        commonTableExpression.setSelectStatement(TestUtils.buildSelectStatement());
         selectStatement.getCommonTableExpressions().add(commonTableExpression);
         this.sqlBuilder.withStatement(selectStatement);
         Mockito.when(this.databaseMetadataCacheDao.findDatabases("database"))
@@ -152,9 +152,7 @@ public abstract class SqlBuilderCommonTests {
                         new Column("database", "schema", "table", "column", 4, "alias"),
                         Operator.equalTo,
                         new Filter(
-                                List.of("1"),
-                                List.of(),
-                                List.of()
+                                List.of("1")
                         ),
                         List.of()
                 )

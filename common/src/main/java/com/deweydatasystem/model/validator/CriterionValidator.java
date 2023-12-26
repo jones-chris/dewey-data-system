@@ -1,12 +1,10 @@
 package com.deweydatasystem.model.validator;
 
-import com.deweydatasystem.model.criterion.Criterion;
-import lombok.NonNull;
 import com.deweydatasystem.exceptions.CriterionColumnDataTypeAndFilterMismatchException;
+import com.deweydatasystem.model.criterion.Criterion;
 import com.deweydatasystem.utils.Utils;
+import lombok.NonNull;
 
-import java.math.BigDecimal;
-import java.sql.Types;
 import java.util.List;
 
 import static com.deweydatasystem.model.criterion.Operator.isNotNull;
@@ -28,7 +26,7 @@ public class CriterionValidator extends SqlValidator<Criterion> {
          */
         if (! obj.getOperator().equals(isNotNull) && ! obj.getOperator().equals(isNull)) {
             if (obj.getFilter().getValues().isEmpty() || obj.getFilter().getValues().contains("")) {
-                if (obj.getFilter().getSubQueries().isEmpty()) {
+                if (obj.getFilter().getSubQueryPlaceholder().isEmpty()) {  // todo:  check this logic.
                     throw new IllegalStateException("Criterion filter values are empty or contain an empty string but the operator " +
                             "is not isNull or isNotNull and there are no sub queries");
                 }
@@ -37,25 +35,12 @@ public class CriterionValidator extends SqlValidator<Criterion> {
 
         // If the criterion's column's data type is a non-string type, check that the values can be converted to the data type.
         int jdbcDataType = obj.getColumn().getDataType();
-        if (jdbcDataType == Types.BIGINT || jdbcDataType == Types.DECIMAL || jdbcDataType == Types.DOUBLE ||
-                jdbcDataType == Types.FLOAT || jdbcDataType == Types.INTEGER || jdbcDataType == Types.NUMERIC ||
-                jdbcDataType == Types.SMALLINT || jdbcDataType == Types.TINYINT) {
-            for (String value : obj.getFilter().getValues()) {
-                try {
-                    BigDecimal.valueOf(Double.parseDouble(value));
-                } catch (NumberFormatException e) {
-                    throw new CriterionColumnDataTypeAndFilterMismatchException(
-                            Utils.getJdbcSqlType(jdbcDataType),
-                            value
-                    );
-                }
-            }
-        }
-        else if (jdbcDataType == Types.BOOLEAN) {
-            for (String value : obj.getFilter().getValues()) {
-                if (! Boolean.TRUE.toString().toLowerCase().equals(value) || ! Boolean.FALSE.toString().toLowerCase().equals(value)) {
-                    throw new CriterionColumnDataTypeAndFilterMismatchException("BOOLEAN", value);
-                }
+        for (String value : obj.getFilter().getValues()) {
+            if (! Utils.isOfJdbcType(value, jdbcDataType)) {
+                throw new CriterionColumnDataTypeAndFilterMismatchException(
+                        Utils.getJdbcSqlType(jdbcDataType),
+                        value
+                );
             }
         }
 

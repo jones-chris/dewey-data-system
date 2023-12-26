@@ -1,5 +1,6 @@
 package com.deweydatasystem;
 
+import com.deweydatasystem.model.cte.CommonTableExpression;
 import lombok.NonNull;
 import com.deweydatasystem.aspect.LogExecutionTime;
 import com.deweydatasystem.dao.database.DatabaseMetadataCacheDao;
@@ -15,6 +16,7 @@ import com.deweydatasystem.service.QueryTemplateService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * This class uses a SelectStatement to generate a SELECT SQL string.
@@ -94,7 +96,7 @@ public abstract class SqlBuilder {
         this.queryTemplateService.getCommonTableExpressionSelectStatement(this.selectStatement.getCommonTableExpressions());
 
         // Interpolate the runtime arguments into the SelectStatement's criteria BEFORE validation.
-        SqlPrimer.interpolateRuntimeArguments(this.selectStatement);
+//        SqlPrimer.interpolateRuntimeArguments(this.selectStatement);
 
         // Override properties, such as the columns to return or the limit.
         SqlPrimer.overrideProperties(this.selectStatement);
@@ -123,7 +125,7 @@ public abstract class SqlBuilder {
         return this;
     }
 
-    public abstract String getSql();
+    public abstract String getParameterizedSql();
 
     protected void assertIsBuilt() {
         if (! this.isBuilt) {
@@ -138,25 +140,28 @@ public abstract class SqlBuilder {
     protected void createCommonTableExpressionClause() {
         if (! this.selectStatement.getCommonTableExpressions().isEmpty()) {
             // Instantiate a SqlBuilderFactory inside this SqlBuilder instance to build the SQL for the Common Table Expressions.
-            SqlBuilderFactory sqlBuilderFactory = new SqlBuilderFactory(
-                    this.databaseMetadataCacheDao,
-                    this.queryTemplateService,
-                    this.selectStatementValidator
-            );
+//            SqlBuilderFactory sqlBuilderFactory = new SqlBuilderFactory(
+//                    this.databaseMetadataCacheDao,
+//                    this.queryTemplateService,
+//                    this.selectStatementValidator
+//            );
 
-            List<String> commonTableExpressionSqlStrings = new ArrayList<>();
-            this.selectStatement.getCommonTableExpressions().forEach(commonTableExpression -> {
-                // Build the Common Table Expression SELECT SQL.
-                String sql = sqlBuilderFactory.buildSqlBuilder(commonTableExpression.getSelectStatement().getDatabase().getDatabaseName())
-                        .withStatement(commonTableExpression.getSelectStatement())
-                        .build()
-                        .getSql();
-                commonTableExpression.setSql(sql);
+            List<String> commonTableExpressionSqlStrings = this.selectStatement.getCommonTableExpressions().stream()
+                    .map(cte -> cte.toSql(this.beginningDelimiter, this.endingDelimiter)) // todo: Interpolate CTEs
+                    .collect(Collectors.toList());
 
-                // Get the Common Table Expression's wrapped SQL that wraps/encapsulates the SELECT SQL.
-                String commonTableExpressionSql = commonTableExpression.toSql(this.beginningDelimiter, this.endingDelimiter);
-                commonTableExpressionSqlStrings.add(commonTableExpressionSql);
-            });
+//            this.selectStatement.getCommonTableExpressions().forEach(commonTableExpression -> {
+//                // Build the Common Table Expression SELECT SQL.
+//                String sql = sqlBuilderFactory.buildSqlBuilder(commonTableExpression.getSelectStatement().getDatabase().getDatabaseName())
+//                        .withStatement(commonTableExpression.getSelectStatement())
+//                        .build()
+//                        .getSql();
+//                commonTableExpression.setSql(sql);
+//
+//                // Get the Common Table Expression's wrapped SQL that wraps/encapsulates the SELECT SQL.
+//                String commonTableExpressionSql = commonTableExpression.toSql(this.beginningDelimiter, this.endingDelimiter);
+//                commonTableExpressionSqlStrings.add(commonTableExpressionSql);
+//            });
 
             // Create the full WITH/Common Table Expression SQL based on all the Common Table Expressions wrapped SQL.
             this.stringBuilder

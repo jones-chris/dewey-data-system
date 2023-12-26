@@ -14,7 +14,6 @@ import com.deweydatasystem.model.database.Database;
 import com.deweydatasystem.model.join.Join;
 import com.deweydatasystem.model.table.Table;
 import com.deweydatasystem.utils.CriteriaDeserializer;
-import com.deweydatasystem.utils.CriteriaSerializer;
 
 import javax.validation.constraints.Size;
 import java.io.Serializable;
@@ -68,7 +67,6 @@ public class SelectStatement implements Serializable {
      * The criteria in the WHERE SQL clause.
      */
     @JsonDeserialize(using = CriteriaDeserializer.class)
-    @JsonSerialize(using = CriteriaSerializer.class)
     @JsonProperty(value = "criteria")
     private final List<Criterion> criteria = new ArrayList<>();
 

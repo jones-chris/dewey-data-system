@@ -24,7 +24,7 @@ public class CommonTableExpressionTest {
         commonTableExpression.setName("cte1");
         commonTableExpression.setQueryName("get_cte_results");
         commonTableExpression.setParametersAndArguments(Map.of());
-        commonTableExpression.setSelectStatement(new SelectStatement());
+//        commonTableExpression.setSelectStatement(new SelectStatement());
         commonTableExpression.setSql(" SELECT col1, col2 FROM table1 ");
         String expectedCteSql = " cte1 AS ( SELECT col1, col2 FROM table1 )";
 
@@ -71,7 +71,7 @@ public class CommonTableExpressionTest {
         commonTableExpression.setSql(" hello ");
         commonTableExpression.setName("name");
         commonTableExpression.setQueryName("queryName");
-        commonTableExpression.setSelectStatement(TestUtils.buildSelectStatement());
+//        commonTableExpression.setSelectStatement(TestUtils.buildSelectStatement());
         commonTableExpression.setParametersAndArguments(Map.of());
         commonTableExpression.setVersion(10);
         commonTableExpression.setOverrides(new SelectStatement.PropertyOverrides());

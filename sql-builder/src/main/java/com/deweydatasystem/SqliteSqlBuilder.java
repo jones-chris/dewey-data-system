@@ -21,7 +21,7 @@ public class SqliteSqlBuilder extends SqlBuilder {
     @SuppressWarnings("DuplicatedCode")
     @Override
     @LogExecutionTime
-    public String getSql() {
+    public String getParameterizedSql() {
         this.assertIsBuilt();
 
         this.createCommonTableExpressionClause();

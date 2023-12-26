@@ -3,6 +3,7 @@ import * as Utils from "../Utils/Utils";
 
 const initialState = {
     rawSql: null,
+    rawSqlParameters: [],
     metadata: {
         name: '',
         description: '',
@@ -104,6 +105,7 @@ const queryReducer = (state = initialState, action) => {
             return newState;
         case Constants.UPDATE_RAW_SQL:
             newState.rawSql = action.payload.rawSql;
+            newState.rawSqlParameters = action.payload.parameters;
             return newState;
         case 'ADD_JOIN':
             newState.joins = action.payload.joins;

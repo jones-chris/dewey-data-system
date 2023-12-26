@@ -29,7 +29,7 @@ public class FilterTest {
     public void isEmpty_valuesAndSubQueriesAreNotEmptyReturnsFalse() {
         Filter filter = new Filter();
         filter.setValues(List.of("hello"));
-        filter.setSubQueries(List.of("world"));
+        filter.setSubQueryPlaceholder("world");
 
         assertFalse(filter.isEmpty());
     }
@@ -38,8 +38,8 @@ public class FilterTest {
     public void isEmpty_valuesAndSubQueriesAndParametersAreNotEmptyReturnsFalse() {
         Filter filter = new Filter();
         filter.setValues(List.of("hello"));
-        filter.setSubQueries(List.of("world"));
-        filter.setParameters(List.of("!"));
+        filter.setSubQueryPlaceholder("world");
+        filter.setParameter("!");
 
         assertFalse(filter.isEmpty());
     }
@@ -54,7 +54,7 @@ public class FilterTest {
     @Test
     public void hasSubQueries_subQueriesAreNotEmptyReturnsTrue() {
         Filter filter = new Filter();
-        filter.setSubQueries(List.of("hello"));
+        filter.setSubQueryPlaceholder("hello");
 
         assertTrue(filter.hasSubQueries());
     }
@@ -225,11 +225,7 @@ public class FilterTest {
         List<String> values = new ArrayList<>();
         values.add("bob");
         values.add("sam");
-        Filter filter = new Filter(
-                values,
-                new ArrayList<>(),
-                new ArrayList<>()
-        );
+        Filter filter = new Filter(values);
 
         byte[] bytes = SerializationUtils.serialize(filter);
         Filter deserializedFilter = SerializationUtils.deserialize(bytes);

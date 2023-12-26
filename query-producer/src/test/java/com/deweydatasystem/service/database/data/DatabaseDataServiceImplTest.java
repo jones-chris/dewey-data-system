@@ -49,7 +49,7 @@ public class DatabaseDataServiceImplTest {
                 .thenReturn(sqlBuilder);
         when(sqlBuilder.build())
                 .thenReturn(sqlBuilder);
-        when(sqlBuilder.getSql())
+        when(sqlBuilder.getParameterizedSql())
                 .thenReturn("SELECT CURRENT_TIMESTAMP");
 
         when(this.databaseMetadataCacheDao.findDatabases(anyString()))

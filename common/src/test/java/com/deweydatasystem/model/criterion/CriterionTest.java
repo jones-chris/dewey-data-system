@@ -25,7 +25,7 @@ public class CriterionTest {
     @Test
     public void hasSearchOperator_trueForLikeOperator() {
         Column column = createMockColumn("test", false);
-        Filter filter = new Filter(List.of("hello%"), List.of(), List.of());
+        Filter filter = new Filter(List.of("hello%"));
         Criterion criterion = new Criterion(0, null, null, column, Operator.like, filter, null);
 
         assertTrue(criterion.hasSearchOperator());
@@ -34,7 +34,7 @@ public class CriterionTest {
     @Test
     public void hasSearchOperator_trueForNotLikeOperator() {
         Column column = createMockColumn("test", false);
-        Filter filter = new Filter(List.of("hello%"), List.of(), List.of());
+        Filter filter = new Filter(List.of("hello%"));
         Criterion criterion = new Criterion(0, null, null, column, Operator.notLike, filter, null);
 
         assertTrue(criterion.hasSearchOperator());
@@ -43,7 +43,7 @@ public class CriterionTest {
     @Test
     public void hasSearchOperator_falseForEqualToOperator() {
         Column column = createMockColumn("test",false);
-        Filter filter = new Filter(List.of("hello%"), List.of(), List.of());
+        Filter filter = new Filter(List.of("hello%"));
         Criterion criterion = new Criterion(0,null, null, column, Operator.equalTo, filter, null);
 
         assertFalse(criterion.hasSearchOperator());
@@ -79,7 +79,7 @@ public class CriterionTest {
     @Test
     public void toSql_nullSchema() {
         Column column = createMockColumn(null, true);
-        Filter filter = new Filter(List.of("test"), List.of(), List.of());
+        Filter filter = new Filter(List.of("test"));
         Criterion criterion = new Criterion(0, null, Conjunction.And, column, Operator.equalTo, filter, null);
         String expectedSql = " AND `test`.`test` = (test) ";
 
@@ -91,7 +91,7 @@ public class CriterionTest {
     @Test
     public void toSql_nullStringSchema() {
         Column column = createMockColumn("null", true);
-        Filter filter = new Filter(List.of("test"), List.of(), List.of());
+        Filter filter = new Filter(List.of("test"));
         Criterion criterion = new Criterion(0, null, Conjunction.And, column, Operator.equalTo, filter, null);
         String expectedSql = " AND `test`.`test` = (test) ";
 
@@ -103,7 +103,7 @@ public class CriterionTest {
     @Test
     public void toSql_nonNullSchema() {
         Column column = createMockColumn("my_schema", true);
-        Filter filter = new Filter(List.of("test"), List.of(), List.of());
+        Filter filter = new Filter(List.of("test"));
         Criterion criterion = new Criterion(0, null, Conjunction.And, column, Operator.equalTo, filter, null);
         String expectedSql = " AND `my_schema`.`test`.`test` = (test) ";
 
@@ -255,9 +255,7 @@ public class CriterionTest {
                         TestUtils.buildColumn(Types.VARCHAR),
                         Operator.equalTo,
                         new Filter(
-                                List.of("bob", "sam"),
-                                List.of(),
-                                List.of()
+                                List.of("bob", "sam")
                         ),
                         List.of()
                 ),
@@ -265,17 +263,13 @@ public class CriterionTest {
                 TestUtils.buildColumn(Types.VARCHAR),
                 Operator.equalTo,
                 new Filter(
-                        List.of("sally", "sue"),
-                        List.of(),
-                        List.of()
+                        List.of("sally", "sue")
                 ),
                 List.of(
                         TestUtils.buildCriterion(
                                 TestUtils.buildColumn(Types.VARCHAR),
                                 new Filter(
-                                        List.of("bob", "sam"),
-                                        List.of(),
-                                        List.of()
+                                        List.of("bob", "sam")
                                 )
                         )
                 )
@@ -295,7 +289,7 @@ public class CriterionTest {
     private Criterion createMockCriterion(int id, Criterion parentCriterion, Column column, Conjunction parentCriterionConjunction) {
         // If no parentCriterion parameter, then return a root criterion.
         // Else, return a child criterion.
-        Filter filter = new Filter(List.of("test"), List.of(), List.of());
+        Filter filter = new Filter(List.of("test"));
         if (parentCriterion == null) {
             return new Criterion(id, null, parentCriterionConjunction, column, Operator.equalTo, filter, null);
         } else {

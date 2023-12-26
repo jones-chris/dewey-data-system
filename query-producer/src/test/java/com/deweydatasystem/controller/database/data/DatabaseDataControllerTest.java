@@ -332,7 +332,7 @@ public class DatabaseDataControllerTest {
                 .when(sqlBuilder).withStatement(any());
         doReturn(sqlBuilder)
                 .when(sqlBuilder).build();
-        when(sqlBuilder.getSql())
+        when(sqlBuilder.getParameterizedSql())
                 .thenReturn(expectedSql);
 
         this.mockMvc.perform(
@@ -364,7 +364,7 @@ public class DatabaseDataControllerTest {
                 .when(sqlBuilder).withStatement(any());
         doReturn(sqlBuilder)
                 .when(sqlBuilder).build();
-        when(sqlBuilder.getSql())
+        when(sqlBuilder.getParameterizedSql())
                 .thenReturn(expectedSql);
 
         this.mockMvc.perform(

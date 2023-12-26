@@ -4,6 +4,7 @@ import lombok.*;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static com.deweydatasystem.model.criterion.Operator.isNotNull;
@@ -15,67 +16,52 @@ import static com.deweydatasystem.model.criterion.Operator.isNull;
 @Data
 public class Filter implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
+    /**
+     * The values of the filter, such as 1, 2, 3 or "bob", "sally", etc.
+     */
     private List<String> values = new ArrayList<>();
 
-    private List<String> subQueries = new ArrayList<>();
+    /**
+     * Sub query placeholders, which act as a placeholder/flag for the relevant SQL string to be added to the values field.
+     */
+    private String subQueryPlaceholder = "";
 
-    private List<String> parameters = new ArrayList<>();
+    /**
+     * A placeholder for a criterion parameter.  Note that sub query placeholders (prefixed with "$") should have
+     * already been replaced with the relevant SQL string in the values field.
+     */
+    private String parameter = "";
+
+    public Filter(List<String> values) {
+        this.values = values;
+    }
+
+    public void replaceParameter(List<String> valuesToAdd) {
+        this.parameter = "";
+        this.values.addAll(valuesToAdd);
+    }
+
+    public void replaceSubQueryPlaceholder(String subQuerySql) {
+        this.subQueryPlaceholder = "";
+        this.values.add(subQuerySql);
+    }
 
     public boolean isEmpty() {
-        return this.values.isEmpty() && this.subQueries.isEmpty() && this.parameters.isEmpty();
+        return this.values.isEmpty() && this.subQueryPlaceholder.isEmpty() && this.parameter.isEmpty();
     }
 
     public boolean hasSubQueries() {
-        return ! this.subQueries.isEmpty();
+        return ! this.subQueryPlaceholder.isEmpty();
     }
-
-//    public void interpolate(List<CommonTableExpression> commonTableExpressions, Map<String, String> runtimeArguments) {
-//        // Get the Common Table Expressions that are relevant to this Filter by filtering out the Common Table Expressions
-//        // who's name does not appear in this Filter's subQueries.
-//        List<CommonTableExpression> relevantCommonTableExpressions = commonTableExpressions.stream()
-//                .filter(commonTableExpression -> this.subQueries.contains(commonTableExpression.getName()))
-//                .collect(Collectors.toList());
-//
-//        // Check that the we found a Common Table Expression for all subQueries.
-//        if (this.subQueries.size() != relevantCommonTableExpressions.size()) {
-//            throw new IllegalArgumentException("Size of subQueries and relevantCommonTableExpressions do not match");
-//        }
-//
-//        // Add a value for each Common Table Expression.
-//        final String sql = "(SELECT * FROM %s)";
-//        relevantCommonTableExpressions.forEach(commonTableExpression -> {
-//            if (commonTableExpression.isBuilt()) {
-//                this.values.add(
-//                        String.format(sql, commonTableExpression.getName())
-//                );
-//            } else {
-//                throw new IllegalArgumentException("CommonTableExpression is not built yet");
-//            }
-//        });
-//
-//        // Check that we have an argument for each parameter.  If not throw an exception.
-//        if (! runtimeArguments.keySet().containsAll(this.parameters)) {
-//            throw new IllegalArgumentException("Not all parameters have runtime arguments for " + this.toString());
-//        }
-//
-//        // Get the argument for each parameter and add a value for it.
-//        this.parameters.forEach(parameter -> {
-//            String runtimeArgument = runtimeArguments.get(parameter);
-//
-//            if (runtimeArgument.startsWith("$")) {
-//
-//            }
-//
-//            this.values.add(
-//                    runtimeArguments.get(parameter)
-//            );
-//        });
-//    }
 
     public String toSql(Operator operator) {
         StringBuilder sql = new StringBuilder();
+
+        if (! this.parameter.isEmpty()) {
+            return ":" + this.parameter + "";
+        }
 
         if (this.values.isEmpty()) {
             return "";

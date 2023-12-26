@@ -107,7 +107,7 @@ public class SelectStatementValidatorTest {
                                 false
                         ),
                         Operator.equalTo,
-                        new Filter(List.of("bob"), List.of(), List.of()),
+                        new Filter(List.of("bob")),
                         List.of()
                 )
         );
@@ -134,7 +134,7 @@ public class SelectStatementValidatorTest {
                                 true
                         ),
                         Operator.equalTo,
-                        new Filter(List.of("bob"), List.of(), List.of()),
+                        new Filter(List.of("bob")),
                         List.of()
                 )
         );
@@ -153,7 +153,7 @@ public class SelectStatementValidatorTest {
                                 true
                         ),
                         Operator.equalTo,
-                        new Filter(List.of("bob"), List.of(), List.of()),
+                        new Filter(List.of("bob")),
                         List.of()
                 )
         );

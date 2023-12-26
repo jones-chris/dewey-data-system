@@ -259,7 +259,7 @@ class MenuBar extends Component {
 
                             <Dropdown.Menu>
                                 {store.getState().menuBar.rawSql.isHidden && <Dropdown.Item onClick={this.onGenerateSqlHandler}>Generate SQL</Dropdown.Item>}
-                                <Dropdown.Item onClick={this.onRunQueryHandler}>Execute Query</Dropdown.Item>
+                                {(! store.getState().menuBar.dataCatalog.isHidden || ! store.getState().menuBar.rawSql.isHidden) && <Dropdown.Item onClick={this.onRunQueryHandler}>Execute Query</Dropdown.Item>}
                             </Dropdown.Menu>
                         </Dropdown>
                     }
