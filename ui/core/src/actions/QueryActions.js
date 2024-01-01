@@ -117,7 +117,14 @@ export const extractParameters = (sql) => {
     const regEx = /\?[\w]+/gm;
     let matches = sql.match(regEx);
 
-    return (matches) ? matches : [];
+    // If nothing is found, return the empty array now.
+    if (! matches) {
+        return [];
+    }
+
+    // Otherwise, if something was found, remove any duplicates.
+    matches = new Set(matches);
+    return Array.from(matches);
 }
 
 const buildSelectStatement = () => {

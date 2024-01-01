@@ -120,7 +120,7 @@ public class Main {
                     // After the query has finished and the connection has been released, decrement the number of connections in use.
                     dataSourceConnectionsMetadata.getCurrentNumberOfDatabaseConnectionsInUse().getAndDecrement();
 
-                    identifiedQueryResult.setSelectStatement(runnableQueryMessage.getSelectStatement());
+//                    identifiedQueryResult.setSelectStatement(runnableQueryMessage.getSelectStatement());
 
                     log.info("Successfully ran identified query result with id, {}", identifiedQueryResult.getRunnableQueryId());
 

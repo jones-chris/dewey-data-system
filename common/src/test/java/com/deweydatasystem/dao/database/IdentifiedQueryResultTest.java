@@ -13,7 +13,7 @@ public class IdentifiedQueryResultTest {
     @Test
     public void serializeAndDeserializeAllFieldsSuccessfully() {
         IdentifiedQueryResult identifiedQueryResult = new IdentifiedQueryResult(UUID.randomUUID());
-        identifiedQueryResult.setSelectStatement(TestUtils.buildSelectStatement());
+//        identifiedQueryResult.setSelectStatement(TestUtils.buildSelectStatement());
         identifiedQueryResult.setSql("select * from table");
 
         byte[] bytes = SerializationUtils.serialize(identifiedQueryResult);

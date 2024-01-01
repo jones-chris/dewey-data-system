@@ -10,6 +10,7 @@ import com.deweydatasystem.utils.Utils;
 import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,10 +25,18 @@ public class QueryResult implements Serializable {
 
     private static final long serialVersionUID = 2L;
 
-    protected SelectStatement selectStatement;
+//    protected SelectStatement selectStatement;
 
-    protected final List<String> columns = new ArrayList<>();
+    protected String[] columns;
 
+    /**
+     * The {@link Types} {@link int} for the columns' data types.
+     */
+    protected int[] columnDataTypes;
+
+    /**
+     * The data in the
+     */
     protected final List<Object[]> data = new ArrayList<>();
 
     protected String sql;
@@ -58,17 +67,30 @@ public class QueryResult implements Serializable {
 
         // Set `columns` and `data` fields.
         boolean columnNamesRetrieved = false;
+        boolean columnDataTypesRetrieved = false;
 
         try {
             int totalColumns = resultSet.getMetaData().getColumnCount();
+            this.columnDataTypes = new int[totalColumns];
+            this.columns = new String[totalColumns];
+
             while (resultSet.next()) {
-                // If column names have not been retrieved yet, build the json array before getting data.
+                // If column names have not been retrieved yet, build the JSON array before getting data.
                 if (! columnNamesRetrieved) {
                     for (int i = 0; i < totalColumns; i++) {
-                        this.columns.add(resultSet.getMetaData().getColumnLabel(i + 1).toLowerCase());
+                        this.columns[i] = resultSet.getMetaData().getColumnLabel(i + 1).toLowerCase();
                     }
 
                     columnNamesRetrieved = true;
+                }
+
+                // If column data types have not been retrieved yet, build the JSON array before getting data.
+                if (! columnDataTypesRetrieved) {
+                    for (int i = 0; i < totalColumns; i++) {
+                        this.columnDataTypes[i] = resultSet.getMetaData().getColumnType(i + 1);
+                    }
+
+                    columnDataTypesRetrieved = true;
                 }
 
                 // Now get the row's data, put it in a json array, and add it to the json object.

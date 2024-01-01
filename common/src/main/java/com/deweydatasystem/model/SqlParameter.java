@@ -83,7 +83,6 @@ public class SqlParameter {
     @Data
     @Slf4j
     public static class EnumConstraint implements Constraint {
-
         private List<String> enumValues = new ArrayList<>();
 
         @Override

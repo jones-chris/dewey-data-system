@@ -16,7 +16,7 @@ public class QueryResultTest {
     @Test
     public void serializeAndDeserializeAllFieldsSuccessfully() {
         QueryResult queryResult = new QueryResult();
-        queryResult.setSelectStatement(TestUtils.buildSelectStatement());
+//        queryResult.setSelectStatement(TestUtils.buildSelectStatement());
         queryResult.setSql("select * from table");
 
         byte[] bytes = SerializationUtils.serialize(queryResult);
