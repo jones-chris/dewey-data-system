@@ -107,6 +107,9 @@ const queryReducer = (state = initialState, action) => {
             newState.rawSql = action.payload.rawSql;
             newState.rawSqlParameters = action.payload.parameters;
             return newState;
+        case 'UPDATE_RAW_SQL_PARAMETERS':
+            newState.rawSqlParameters = action.payload.parameters;
+            return newState;
         case 'ADD_JOIN':
             newState.joins = action.payload.joins;
             return newState;

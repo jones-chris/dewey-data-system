@@ -88,3 +88,15 @@ export function getCriterionFilterValues(criterion) {
 export function sleep(seconds) {
     return new Promise(resolve => setTimeout(resolve, seconds * 1000));
 }
+
+export function enforceInputElementMinMax(inputElement) {
+    if (inputElement.value != '') {
+        if (parseInt(inputElement.value) < parseInt(inputElement.min)) {
+            inputElement.value = inputElement.min;
+        }
+
+        if (parseInt(inputElement.value) > parseInt(inputElement.max)) {
+            inputElement.value = inputElement.max;
+        }
+      }
+}
